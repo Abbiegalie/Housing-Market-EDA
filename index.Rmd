@@ -1,7 +1,7 @@
 ---
 title: 'Project 1: Wrangling, Exploration, Visualization'
 author: "SDS322E"
-date: 11/03/2021
+date: ''
 output:
   html_document:
     toc: yes
@@ -10,114 +10,157 @@ output:
       smooth_scroll: yes
   pdf_document:
     toc: no
-    
-    ## Data Wrangling, Exploration, Visualization
-
-### Abigail Tovar art2976
-
-
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
 tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
 ```
+
+## Data Wrangling, Exploration, Visualization
+
+### Abigail Tovar
+
 #### Introduction 
-#This project analyzes local house prices around Austin Texas. Austin is one of the fastest growing cities in the nation proving itself to be a desirable spot for travel, leisure, and work in the past decade. The second dataset I analyzed for the project contains data of crime in Austin in 2018. This phenomenon is interesting to me as I have lived here for many years so seeing the transition within real estate from gentrification, and the implications of these changing demographics in certain areas over others in terms of crime rate is of great interest to me. Furthermore, there was a good amount of quality data that was readily available and highly relatable for these topics. I acquired the two datasets from Kaggle.com,  as well as, the official website for the city of Austin government.
+This project analyzes local house prices around Austin Texas. Austin is one of the fastest growing cities in the nation proving itself to be a desirable spot for travel, leisure, and work in the past decade. The second dataset I analyzed for the project contains data of crime in Austin in 2018. This phenomenon is interesting to me as I have lived here for many years so seeing the transition within real estate from gentrification, and the implications of these changing demographics in certain areas over others in terms of crime rate is of great interest to me. Furthermore, there was a good amount of quality data that was readily available and highly relatable for these topics. I acquired the two datasets from Kaggle.com,  as well as, the official website for the city of Austin government.
 
 
-```{R eval=F}
- 
-#2. Data prep
-#I performed an inner_join on the datasets because I wanted to preserve the data that was in the second data set, without dropping what was not in the first data set. I joined based on the zipcode for each area and eventually I figured it help me to visualize the distribution of prices in the area. After joining, the joined data set had 64 variables, and 43,141,748 objects whereas before there were 102446 objects and 27 variables in the crime dataset and 47 variables and 15,318 in the "Austin Housing dataset".
+
+
+
+#### Tidying: Reshaping
+
+If your datasets are tidy already, demonstrate that you can reshape data with pivot wider/longer here (e.g., untidy and then retidy). Alternatively, it may be easier to wait until the wrangling section so you can reshape your summary statistics. Note here if you are going to do this.
+
+```{R}
+#Will reshape later
+```
+
+    
+#### Joining/Merging
+
+```{R}
 
 library(tidyverse)
 data_1 <- read_csv("Crime_Reports_2018.csv")
 data_2 <- read_csv("austinHousingData.csv")
 merged_data <- data_1 %>% inner_join(data_2, by = c('Zip Code' = "zipcode"))
+head(merged_data)
 
 ```
 
-```{R eval=F}
-#2. Data Prep Continued.. Drop Rows which are unnecessary and remove duplicates
-merged_data_ <- merged_data %>% select(-c(latitude, longitude, numOfPhotos, homeImage, avgSchoolDistance, avgSchoolSize, latestPriceSource, hasSpa, numOfAccessibilityFeatures, numOfParkingFeatures))
-```
+I performed an inner_join on the datasets because I wanted to preserve the data that was in the second data set, without dropping what was not in the first data set. I joined based on the zipcode for each area and eventually I figured it help me to visualize the distribution of prices in the area. After joining, the joined data set had 64 variables, and 43,141,748 objects. The crime dataset had 102446 rows and 27 columns,  26 of which were unique in the crime dataset and 47 variables 46 of which were unique and 15,318 objects in the "Austin Housing dataset".
 
-```{R eval=F}
-#Find the Household that has the greatest listing price, then summarize by the zipcode and find the average price of the houses in this area. To find the most expensive area in Austin I grouped by zipcode and then summarized the columns in terms of average house prices in descending order. The result is west lake hills or the '78746' zipcode. Create a variable that stores the cumulative sum of houses for each zipcode.
 
-merged_data_3 <- merged_data_ %>% distinct(`zpid`, .keep_all = TRUE)
+
+####  Wrangling
+
+```{R}
+library(tidyverse)
+
+merged_data_3 <- merged_data %>% distinct(`zpid`, .keep_all = TRUE)
 merged_data_3 %>% arrange(desc(latestPrice))
 merged_data_3 %>% group_by(`Zip Code`) %>% summarize(average_price = mean(latestPrice)) %>% arrange(desc(average_price))
 
 ```
+Before performing analysis on the data set I needed it to be tidy. Using tidy verse I dropped the rows which were unnecessary and removed deuplicates. Above I found the household that has the greatest listing price, then summarized by the zipcode to find the average price of the houses in this area. To find the most expensive area in Austin I grouped by zipcode and then summarized the columns in terms of average house prices in descending order, I also had to create a variable that stores the cumulative sum of houses for each zipcode. The result of was that the West Lake Hills or the '78746' zipcode was the most expensive area in Austin, which would make sense as it has some of the best views in Austin, the average price for a listing here using my dataset was $1,422,145.10.	
 
-```{R eval=F}
+```{R}
+crime_no_dup <- merged_data %>% distinct(Address, .keep_all = TRUE)
 
-#remove duplicate case numbers from dataset
-crime_no_dup = merged_data_ %>% distinct(Address, .keep_all=TRUE)
-
-#Find the cumulative crime rate by zipcode, using the crime dataset and sort by highest, which gives the zipcode of 78745, an area in South Austin. This state the cumulative crime amount was 2640. Then to find the most common type of offense use the count feature, which reveals burglary of vehicle is most common with 317 reported crimes in 2018.
-crime_no_dup %>% group_by(`Zip Code`, `Highest Offense Description`) %>% summarize(count=n()) %>% filter(`Zip Code` == 78745) %>%  mutate("cm_crime"= max(cumsum(count))) %>% arrange(desc(count))
+crime_no_dup %>% group_by(`Zip Code`, `Highest Offense Description`) %>% 
+    summarize(count = n()) %>% mutate(cm_crime = max(cumsum(count))) %>% arrange(desc(count))
 
 ```
 
+I wanted to use my data to find the area which was most dangerous by zipcode, using the crime dataset and sorting by highest after calculating the cumulative sum, I got the zipcode of 78745, an area in South Austin. This stated the cumulative crime amount was 2640. I also was curoius to see the most common type of offense here which I found using the count feature, which reveals burglary of vehicle was most common with 317 reported crimes in 2018.
+
+```{R}
+crime_no_dup %>% summarize(mean = mean(latestPrice, na.rm = TRUE), quantile = quantile(latestPrice, probs = c(0.25, 0.75), na.rm = TRUE), counts = n(), n_distinct = n_distinct(latestPrice), min = min(latestPrice, na.rm = TRUE), max = max(latestPrice, na.rm = TRUE))
+
+crime_no_dup %>% na.omit() %>% summarize(mean = mean(numPriceChanges, na.rm = TRUE), sd = sd(numPriceChanges, na.rm = TRUE), quantile = quantile(numPriceChanges,  probs = c(0.25, 0.75), na.rm = TRUE), counts = n(), var = var(numPriceChanges,  na.rm = TRUE), n_distinct = n_distinct(numPriceChanges),  min = min(numPriceChanges, na.rm = TRUE), max = max(numPriceChanges,  na.rm = TRUE))
+
+crime_no_dup %>% na.omit() %>% summarize(mean = mean(yearBuilt, 
+    na.rm = TRUE), sd = sd(yearBuilt, na.rm = TRUE), quantile = quantile(yearBuilt, 
+    probs = c(0.25, 0.75), na.rm = TRUE), counts = n(), var = var(yearBuilt, 
+    na.rm = TRUE), n_distinct = n_distinct(yearBuilt), min = min(yearBuilt, 
+    na.rm = TRUE), max = max(yearBuilt, na.rm = TRUE))
+
+crime_no_dup %>% group_by() %>% summarize(mean = mean(latest_saleyear, 
+    na.rm = TRUE), sd = sd(latest_saleyear, na.rm = TRUE), quantile = quantile(latest_saleyear, 
+    probs = c(0.25, 0.75), na.rm = TRUE), counts = n(), var = var(latest_saleyear, 
+    na.rm = TRUE), n_distinct = n_distinct(yearBuilt), min = min(latest_saleyear, 
+    na.rm = TRUE), max = max(latest_saleyear, na.rm = TRUE))
+
+```
+
+The summary statistics above I calculated for latest price, number of price changes, year built and sale year. The first for latest price showed that the mean price was $480,404.90 with a standard deviation of \$273,209.20 which was fairly high I thought which could signify this value was spread over a wider range.The range of selling houses in terms of latest price is \$300000 to \$639,000. The cheapest house was \$194,800 dollars which definitely speaks to how expensive Austin is, especially in this time of growth where prices for houses have surged.  The max number of price changes was 13, and average was 2, which had expected to be higher, assuming that prices have been changing a lot in the market as it is experiencing a growth in demand. Year built for the average house in my dataset was 1990 and the standard deviation was 21 years.
 
 
-```{R eval=F}
+
+
+``` {R}
+merged_data_3 %>% filter(`Zip Code` == 78746) %>% mutate(address_low = str_to_lower(Address)) %>%  select(Address, address_low) %>% head(5)
+
+address_sample <- merged_data_3 %>% filter(`Zip Code` == 78746) %>% mutate(address_low = str_to_lower(Address)) %>%  select(Address, address_low) %>% head(1)
+
+str_detect(address_sample, "a")
+
+
+```
+Using string r I converted the addresses in the zipcode 78746 to lower case, and saved them as a variable "address_low" then I used str_detect to see if the first address had a lowercase "a". It returned false for the addresses I hadn't converted and true for address_low.
+
+``` {R}
 library(gt)
+crime_no_dup %>% group_by(`Zip Code`, `Location Type`) %>% summarize (count = n()) %>% gt() 
 
-#Summarize Data and Count. 
-
-#Summarize some the numeric variables: 'latestPrice', 'numPriceChanges', 'yearBuilt', 'latestSaleYear', 'avgSchoolRating')
-crime_no_dup %>% na.omit() %>% summarize(mean = mean(latestPrice, na.rm = TRUE), sd = sd(latestPrice, na.rm = TRUE), quantile = quantile(latestPrice, probs = c(.25, .75), na.rm = TRUE), n_rows = n(), var = var(latestPrice,  na.rm = TRUE), n_distinct = n_distinct(latestPrice), min = min(latestPrice,  na.rm = TRUE), max = max(latestPrice,  na.rm = TRUE))
-
-crime_no_dup %>% na.omit() %>% summarize(mean = mean(numPriceChanges, na.rm = TRUE), sd = sd(numPriceChanges, na.rm = TRUE), quantile = quantile(numPriceChanges, probs = c(.25, .75), na.rm = TRUE), n_rows = n(), var = var(numPriceChanges,  na.rm = TRUE), n_distinct = n_distinct(numPriceChanges), min = min(numPriceChanges,  na.rm = TRUE), max = max(numPriceChanges,  na.rm = TRUE)) 
-
-crime_no_dup %>% na.omit() %>% summarize(mean = mean(yearBuilt, na.rm = TRUE), sd = sd(yearBuilt, na.rm = TRUE), quantile = quantile(yearBuilt, probs = c(.25, .75), na.rm = TRUE), n_rows = n(), var = var(yearBuilt,  na.rm = TRUE), n_distinct = n_distinct(yearBuilt), min = min(yearBuilt,  na.rm = TRUE), max = max(yearBuilt,  na.rm = TRUE)) 
-
-crime_no_dup %>% na.omit() %>% summarize(mean = mean(avgSchoolRating, na.rm = TRUE), sd = sd(avgSchoolRating, na.rm = TRUE), quantile = quantile(avgSchoolRating, probs = c(.25, .75), na.rm = TRUE), n_rows = n(), var = var(avgSchoolRating,  na.rm = TRUE), n_distinct = n_distinct(avgSchoolRating), min = min(avgSchoolRating,  na.rm = TRUE), max = max(avgSchoolRating,  na.rm = TRUE)) 
-
-#Summarize some of the the categorical variables
-crime_no_dup %>% group_by(`Category Description`) %>% count()
-crime_no_dup %>% group_by(`Council District`) %>% count()
-crime_no_dup %>% group_by(`Highest Offense Description`) %>% count()
-crime_no_dup %>% group_by(homeType) %>% count()
-#Compute Summary Statistics Overall
-summarise_all(crime_no_dup,funs(mean, sd, var, n_distinct, n(), max, min))
-crime_no_dup %>% group_by(`Zip Code`) %>% summarize(mean = mean(numOfPrimarySchools)) %>% pivot_wider(names_from = `Zip Code`, values_from = mean)
-crime_no_dup %>% summarize_all(function(x)sum(is.na(x)))
-
-#Reshape Tables with Summaries
-
-table1<- crime_no_dup %>% group_by(`Zip Code`) %>% summarize(mean_schools = mean(numOfPrimarySchools+numOfElementarySchools+numOfHighSchools+numOfMiddleSchools)) %>% gt()
+#Reshape tables 
+table1 <- crime_no_dup %>% group_by(`Zip Code`) %>% summarize(mean_schools = mean(numOfPrimarySchools + numOfElementarySchools + numOfHighSchools + numOfMiddleSchools)) %>% pivot_wider(names_from = `Zip Code`, values_from = mean_schools)
 table1
-table_2 <- tibble(summarise_all(crime_no_dup,funs(mean, sd, var, n_distinct, n(), max, min)))
-
 
 ```
+Lastly I summarized the crime statistics overall in terms of the mean, standard deviation, variance, maximum and minimum, as well as, count. I wanted to see areas downtown and what crime stats were here, which was interesting as it revealed in 78701 a lot of crime was around bar and night clubs, parking lots, as well as streets. I used pivot_wider to arrange the summary statistics here for Zip Code and location type which broke down th most common location in which crime occurred in certain areas. I also arranged a table for statistics which showed the number of public schools in each zip code it uses pivot wider to create the summary statistics, the areas with the highest areas of schools were 78753 and 78754. 
 
-```{R eval=F}
+
+#### Visualizing
+
+```{R}
 library(ggplot2)
-
-# In this project, I analyzed the criminal incident data from the year of 2018 for the city of Austin. The first visualization is a graphical representation of the relationship between the variables for the incident reports and Austin City Council Districts. It can be find the place with the greatest amount of incident reports, is District 1, or far East Austin, and the place with the least is District 6, or far Northwest Austin. Overall the trend of the graph seems to prove that whether North or South, the most dangerous neighborhoods in Austin are within East Austin, and i-35 is somewhat of the dividing line.
-
 crime_daily = crime_no_dup %>% group_by(`Council District`, `Incident Number`)
 crime_count = summarize(crime_daily) %>% count()
-ggplot(crime_count, aes(x=`Council District`, y=n)) + geom_point(colour = "red") + 
-  geom_line(colour = "red", size = 1.5) + theme_light(base_size = 12) + xlab("Coucil District") + ylab("Count of indicents") +   
-  scale_x_continuous(breaks=c(1:10)) +
-  ggtitle("The Number of Incidents in Austin Council Districts") + 
-  theme(plot.title=element_text(size=16))
-
-# In the project, I analyzed the crime incident data from the year of 2018 for the city of Austin. The first visualization is a graphical representation of the relationship between the variables for the incident reports and Austin City Council Districts. It can be find the place with the greatest amount of incident reports, is District 1, or far East Austin, and the place with the least is District 6, or far Northwest Austin. Overall the trend of the graph seems to prove that whether North or South, the most dangerous neighborhoods in Austin are within East Austin, and i-35 is somewhat of the dividing line.
-
-merged_data_3 %>% group_by(`Council District`) %>% summarize(average_price = mean(latestPrice)) %>% na.omit() %>% ggplot(merged_data_3, mapping = aes(x = `Council District`, y = average_price)) +  geom_bar(stat= "identity") + scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) 
-
-# This bar graph of the recent listings values of sold properties around Austin sorted by the Austin City Council Districts shows that the areas with generally higher home values have been safer if we look back to the graph that analyzed the crime incident data and compare districts. This could potentially show that higher crime rates can decrease the proprety values in an area. Another observation which can be made within the City Council District 9, where UT Austin is located, there are the highest average listing sale prices in Austin.
-category_count = crime_no_dup %>% group_by(`Category Description`) %>% count()
-crime_no_dup %>% drop_na() %>% ggplot(crime_no_dup, mapping = aes(x = frequency(category_count), y =`Category Description`)) + geom_col() + xlab("Frequency") +  ggtitle("Freqeuncies of Different types of Crime in Austin 2018") + theme(plot.title=element_text(size=16))
- 
-# This bar graph has bars which represent the overall amount of crime in Austin in the year 2018 in different categories, using the crime dataset and removing the many NAs. From the available data that had been categorized it seems theft was the most common crime by far. Following general theft, are the categories for crime of burglary and auto-theft.  
+ggplot(crime_count, aes(x = `Council District`, y = n)) + geom_point(colour = "red") + 
+    geom_line(colour = "red", size = 1.5) + theme_light(base_size = 12) + 
+    xlab("Coucil District") + ylab("Count of indicents") + scale_x_continuous(breaks = c(1:10)) + 
+    ggtitle("The Number of Incidents in Austin Council Districts") + 
+    theme(plot.title = element_text(size = 16))
 ```
+In this project, I analyzed the crime incident data from the year of 2018 for the city of Austin. The first
+visualization is a graphical representation of the relationship between the variables for the incident reports
+and Austin City Council Districts. It can be find the place with the greatest amount of incident reports, is District 1, or far East Austin, and the place with the least is District 6, or far Northwest Austin. Overall the trend of the graph seems to prove that whether North or South, the most dangerous neighborhoods in Austin are within East Austin, and i-35 is somewhat of the dividing line.
+
+```{R}
+library(ggplot2)
+merged_data_3 %>% group_by(`Council District`) %>% summarize(average_price = mean(latestPrice)) %>% 
+    na.omit() %>% ggplot(merged_data_3, mapping = aes(x = `Council District`, 
+    y = average_price)) + geom_bar(stat = "identity") + scale_x_continuous(breaks = c(1, 
+    2, 3, 4, 5, 6, 7, 8, 9, 10))
+```
+
+This bar graph of the recent listings values of sold properties around Austin sorted by the Austin City Council Districts shows that the areas with generally higher home values have been safer if we look back to the graph that
+analyzed the crime incident data and compare districts. This could potentially show that higher crime rates can
+decrease the proprety values in an area. Another observation which can be made within the City Council
+District 9, where UT Austin is located, there are the highest average listing sale prices in Austin.
+
+```{R}
+library(ggplot2)
+category_count = crime_no_dup %>% group_by(`Category Description`) %>% 
+    count()
+crime_no_dup %>% drop_na() %>% ggplot(crime_no_dup, mapping = aes(x = frequency(category_count), y = `Category Description`)) + geom_col() + xlab("Frequency") +  ggtitle("Freqeuncies of Different types of Crime in Austin 2018") +  theme(plot.title = element_text(size = 16))
+```
+
+This bar graph has bars which represent the overall amount of crime in Austin in the year 2018 in different
+categories, using the crime dataset and removing the many NAs. From the available data that had been categorized it seems theft was the most common crime by far. Following general theft, are the categories for crime of burglary and auto-theft.
+
+
+
 
