@@ -57,10 +57,11 @@ I performed an inner_join on the datasets because I wanted to preserve the data 
 
 ```{R}
 library(tidyverse)
+library(gt)
 
 merged_data_3 <- merged_data %>% distinct(`zpid`, .keep_all = TRUE)
 merged_data_3 %>% arrange(desc(latestPrice))
-merged_data_3 %>% group_by(`Zip Code`) %>% summarize(average_price = mean(latestPrice)) %>% arrange(desc(average_price))
+merged_data_3 %>% group_by(`Zip Code`) %>% summarize(average_price = mean(latestPrice)) %>% arrange(desc(average_price)) %>% gt() %>% tab_header(title=md("**Average Household Prices in Austin by Zipcode**"))
 
 ```
 Before performing analysis on the data set I needed it to be tidy. Using tidy verse I dropped the rows which were unnecessary and removed deuplicates. Above I found the household that has the greatest listing price, then summarized by the zipcode to find the average price of the houses in this area. To find the most expensive area in Austin I grouped by zipcode and then summarized the columns in terms of average house prices in descending order, I also had to create a variable that stores the cumulative sum of houses for each zipcode. The result of was that the West Lake Hills or the '78746' zipcode was the most expensive area in Austin, which would make sense as it has some of the best views in Austin, the average price for a listing here using my dataset was $1,422,145.10.	
@@ -68,8 +69,7 @@ Before performing analysis on the data set I needed it to be tidy. Using tidy ve
 ```{R}
 crime_no_dup <- merged_data %>% distinct(Address, .keep_all = TRUE)
 
-crime_no_dup %>% group_by(`Zip Code`, `Highest Offense Description`) %>% 
-    summarize(count = n()) %>% mutate(cm_crime = max(cumsum(count))) %>% arrange(desc(count))
+crime_no_dup %>% group_by(`Zip Code`, `Highest Offense Description`) %>% summarize(count = n()) %>% mutate(cm_crime = max(cumsum(count))) %>% arrange(desc(count))
 
 ```
 
@@ -111,8 +111,9 @@ str_detect(address_sample, "a")
 Using string r I converted the addresses in the zipcode 78746 to lower case, and saved them as a variable "address_low" then I used str_detect to see if the first address had a lowercase "a". It returned false for the addresses I hadn't converted and true for address_low.
 
 ``` {R}
-library(gt)
-crime_no_dup %>% group_by(`Zip Code`, `Location Type`) %>% summarize (count = n()) %>% gt() 
+
+table1 <- crime_no_dup %>% group_by(`Zip Code`, `Location Type`) %>% summarize (count = n()) 
+
 
 #Reshape tables 
 table1 <- crime_no_dup %>% group_by(`Zip Code`) %>% summarize(mean_schools = mean(numOfPrimarySchools + numOfElementarySchools + numOfHighSchools + numOfMiddleSchools)) %>% pivot_wider(names_from = `Zip Code`, values_from = mean_schools)
@@ -161,6 +162,7 @@ crime_no_dup %>% drop_na() %>% ggplot(crime_no_dup, mapping = aes(x = frequency(
 This bar graph has bars which represent the overall amount of crime in Austin in the year 2018 in different
 categories, using the crime dataset and removing the many NAs. From the available data that had been categorized it seems theft was the most common crime by far. Following general theft, are the categories for crime of burglary and auto-theft.
 
-
+##Conclusion
+It wasn't surprising to see that there was a correlation between the overall median home values in neighborhoods in Austin and how crime rates in the area, as typically unemployment, educational opportunities, and quality of life can differ greatly just by changing the factor of the home values.
 
 
