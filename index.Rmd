@@ -129,11 +129,12 @@ Lastly I summarized the crime statistics overall in terms of the mean, standard 
 library(ggplot2)
 crime_daily = crime_no_dup %>% group_by(`Council District`, `Incident Number`)
 crime_count = summarize(crime_daily) %>% count()
-ggplot(crime_count, aes(x = `Council District`, y = n)) + geom_point(colour = "red") + 
+graph3 <- ggplot(crime_count, aes(x = `Council District`, y = n)) + geom_point(colour = "red") + 
     geom_line(colour = "red", size = 1.5) + theme_light(base_size = 12) + 
     xlab("Coucil District") + ylab("Count of indicents") + scale_x_continuous(breaks = c(1:10)) + 
     ggtitle("The Number of Incidents in Austin Council Districts") + 
     theme(plot.title = element_text(size = 16))
+print(graph3)
 ```
 In this project, I analyzed the crime incident data from the year of 2018 for the city of Austin. The first
 visualization is a graphical representation of the relationship between the variables for the incident reports
@@ -141,10 +142,11 @@ and Austin City Council Districts. It can be find the place with the greatest am
 
 ```{R}
 library(ggplot2)
-merged_data_3 %>% group_by(`Council District`) %>% summarize(average_price = mean(latestPrice)) %>% 
+graph2 <- merged_data_3 %>% group_by(`Council District`) %>% summarize(average_price = mean(latestPrice)) %>% 
     na.omit() %>% ggplot(merged_data_3, mapping = aes(x = `Council District`, 
     y = average_price)) + geom_bar(stat = "identity") + scale_x_continuous(breaks = c(1, 
     2, 3, 4, 5, 6, 7, 8, 9, 10))
+print(graph2)
 ```
 
 This bar graph of the recent listings values of sold properties around Austin sorted by the Austin City Council Districts shows that the areas with generally higher home values have been safer if we look back to the graph that
@@ -156,7 +158,8 @@ District 9, where UT Austin is located, there are the highest average listing sa
 library(ggplot2)
 category_count = crime_no_dup %>% group_by(`Category Description`) %>% 
     count()
-crime_no_dup %>% drop_na() %>% ggplot(crime_no_dup, mapping = aes(x = frequency(category_count), y = `Category Description`)) + geom_col() + xlab("Frequency") +  ggtitle("Freqeuncies of Different types of Crime in Austin 2018") +  theme(plot.title = element_text(size = 16))
+graph1 <- crime_no_dup %>% drop_na() %>% ggplot(crime_no_dup, mapping = aes(x = frequency(category_count), y = `Category Description`)) + geom_col() + xlab("Frequency") +  ggtitle("Freqeuncies of Different types of Crime in Austin 2018") +  theme(plot.title = element_text(size = 16))
+print(graph1)
 ```
 
 This bar graph has bars which represent the overall amount of crime in Austin in the year 2018 in different
